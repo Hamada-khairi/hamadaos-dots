@@ -6,7 +6,7 @@
 ## Quick install — ONE command from bare CachyOS
 
 ```bash
-git clone https://github.com/hamad/hamadaos-dots.git ~/hamadaos-dots
+git clone https://github.com/Hamada-khairi/hamadaos-dots.git ~/hamadaos-dots
 cd ~/hamadaos-dots && ./install.sh
 ```
 
