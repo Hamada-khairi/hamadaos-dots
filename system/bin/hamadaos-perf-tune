@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# ═══════════════════════════════════════════════════════════════════════════════
+# HamadaOS — Performance Tuner (root helper)
+# ═══════════════════════════════════════════════════════════════════════════════
+# Installed to /usr/local/bin (root-owned). Whitelisted in
+# /etc/sudoers.d/hamadaos-gaming with FIXED arguments only — no shell access.
+#
+#   hamadaos-perf-tune gaming      — full performance state
+#   hamadaos-perf-tune balanced    — daily-driver state
+#   hamadaos-perf-tune cpu-boost-off / cpu-boost-on
+#       The thin-laptop trick: on TDP-shared machines (40W RTX 3050, MX350
+#       ultrabooks) the CPU's turbo boost steals package power and thermal
+#       headroom the GPU needs. Capping boost RAISES game FPS on these
+#       machines. Exposed as a toggle in Settings → Gaming.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+set -uo pipefail
+
+w() {  # write-if-exists (never fail on hardware that lacks the knob)
+    [[ -e "$1" ]] && echo "$2" > "$1" 2>/dev/null || true
+}
+
+gaming() {
+    # CPU governor → performance
+    for g in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+        w "$g" performance
+    done
+
+    # Transparent hugepages → always (fewer TLB misses; ~3-7% in big games)
+    w /sys/kernel/mm/transparent_hugepage/enabled always
+    w /sys/kernel/mm/transparent_hugepage/defrag defer+madvise
+
+    # MGLRU working-set protection: pages younger than 3s can't be reclaimed.
+    # THIS is the fix for "45fps then sudden 8fps" on 8GB laptops — the kernel
+    # was evicting the game's hot pages under pressure.
+    w /sys/kernel/mm/lru_gen/enabled y
+    w /sys/kernel/mm/lru_gen/min_ttl_ms 3000
+
+    # PCIe ASPM off while gaming (latency spikes on some laptop dGPUs)
+    w /sys/module/pcie_aspm/parameters/policy performance
+
+    # NVIDIA: prefer max performance clocks while in gaming mode
+    command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi -pm 1 >/dev/null 2>&1 || true
+
+    echo "perf-tune: gaming"
+}
+
+balanced() {
+    for g in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+        w "$g" schedutil
+    done
+    w /sys/kernel/mm/transparent_hugepage/enabled madvise
+    w /sys/kernel/mm/transparent_hugepage/defrag madvise
+    w /sys/kernel/mm/lru_gen/min_ttl_ms 0
+    w /sys/module/pcie_aspm/parameters/policy default
+    echo "perf-tune: balanced"
+}
+
+cpu_boost() {  # $1 = on|off  (off frees package power for the GPU)
+    case "$1" in
+        off)
+            w /sys/devices/system/cpu/intel_pstate/no_turbo 1     # Intel
+            w /sys/devices/system/cpu/cpufreq/boost 0             # AMD
+            echo "perf-tune: CPU boost OFF (GPU gets the thermal headroom)"
+            ;;
+        on)
+            w /sys/devices/system/cpu/intel_pstate/no_turbo 0
+            w /sys/devices/system/cpu/cpufreq/boost 1
+            echo "perf-tune: CPU boost ON"
+            ;;
+    esac
+}
+
+case "${1:-}" in
+    gaming)        gaming ;;
+    balanced)      balanced ;;
+    cpu-boost-off) cpu_boost off ;;
+    cpu-boost-on)  cpu_boost on ;;
+    *) echo "Usage: hamadaos-perf-tune <gaming|balanced|cpu-boost-off|cpu-boost-on>"; exit 1 ;;
+esac

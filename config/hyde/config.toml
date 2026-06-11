@@ -1,0 +1,32 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# HamadaOS — HyDE user configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+# Installed to ~/.config/hyde/config.toml (HyDE's USER override file — never
+# touch ~/.local/share/hyde/schema/config.toml, that's HyDE's and gets
+# overwritten on update).
+#
+# Key changes vs stock HyDE:
+#   bar           → Quickshell (replaces Waybar)
+#   notifications → "" (Quickshell IS the notification daemon)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[hyprland]
+gtk_theme = "adw-gtk3-dark"
+icon_theme = "Papirus-Dark"
+cursor_theme = "Bibata-Modern-Classic"
+font = "Geist"
+font_size = 11
+monospace_font = "JetBrainsMono Nerd Font"
+monospace_font_size = 10
+font_antialiasing = "rgba"
+font_hinting = "slight"
+
+[hyprland-start]
+# Quickshell replaces Waybar — same systemd-scope wrapper HyDE uses.
+bar = "hyde-shell app -u hyde-$XDG_SESSION_DESKTOP-bar.scope -t scope -- quickshell"
+# Quickshell's NotificationServer owns org.freedesktop.Notifications; dunst off.
+notifications = ""
+
+[sysmonitor]
+execute = "mission-center"
+commands = ["mission-center", "btop"]

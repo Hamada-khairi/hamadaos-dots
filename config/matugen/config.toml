@@ -1,0 +1,51 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# HamadaOS — matugen Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+# matugen reads the current wallpaper and writes Material Design 3 color
+# palettes to every output template simultaneously.
+#
+# Triggered by: ~/.config/hyde/wallbash/scripts/hamadaos.sh — HyDE's Wallbash
+# runs it automatically on every wallpaper, theme, and dark/light switch.
+#
+# Reference:
+#   end-4/dots-hyprland — config.toml template mapping pattern
+#   HamadaOS build plan §8 — matugen pipeline specification
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[config]
+version_check = false
+
+# ── Quickshell QML colors (Theme.qml imports this) ────────────────────────────
+[templates.quickshell_colors]
+input_path  = "~/.config/matugen/templates/quickshell_colors.qml"
+output_path = "~/.config/quickshell/GeneratedColors.qml"
+
+# ── Hyprland border/glow colors ───────────────────────────────────────────────
+[templates.hyprland_colors]
+input_path  = "~/.config/matugen/templates/hyprland_colors.conf"
+output_path = "~/.config/hypr/themes/colors.conf"
+
+# ── GTK3 apps (Dolphin, most tray apps, legacy dialogs) ──────────────────────
+[templates.gtk3]
+input_path  = "~/.config/matugen/templates/gtk3.css"
+output_path = "~/.config/gtk-3.0/colors.css"
+
+# ── GTK4 / libadwaita apps (modern GNOME dialogs) ────────────────────────────
+[templates.gtk4]
+input_path  = "~/.config/matugen/templates/gtk4.css"
+output_path = "~/.config/gtk-4.0/gtk.css"
+
+# ── Kitty terminal ────────────────────────────────────────────────────────────
+[templates.kitty]
+input_path  = "~/.config/matugen/templates/kitty_colors.conf"
+output_path = "~/.config/kitty/current-theme.conf"
+
+# ── VSCode / VSCodium ─────────────────────────────────────────────────────────
+[templates.vscode]
+input_path  = "~/.config/matugen/templates/vscode_theme.json"
+output_path = "~/.vscode/extensions/hamadaos-theme/themes/color-theme.json"
+
+# ── Kvantum (Qt5/Qt6 theme engine) ───────────────────────────────────────────
+[templates.kvantum]
+input_path  = "~/.config/matugen/templates/kvantum_colors.kvconfig"
+output_path = "~/.config/Kvantum/GeneratedTheme/GeneratedTheme.kvconfig"

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# HamadaOS — Safe Mode session launcher (referenced by the SDDM session file).
+# Resolves $HOME at login time (.desktop Exec lines can't), falls back to a
+# burned-in minimal config if even the user's safe config is missing.
+SAFE="$HOME/.config/hypr/hyprland-safe.conf"
+if [[ ! -f "$SAFE" ]]; then
+    SAFE="$(mktemp /tmp/hamadaos-safe-XXXX.conf)"
+    cat > "$SAFE" <<'EOF'
+monitor = , preferred, auto, 1
+animations { enabled = false }
+$mainMod = SUPER
+bind = $mainMod, RETURN, exec, kitty
+bind = $mainMod, M, exit
+exec-once = kitty
+EOF
+fi
+exec Hyprland -c "$SAFE"

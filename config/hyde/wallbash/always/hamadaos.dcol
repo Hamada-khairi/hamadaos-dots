@@ -1,0 +1,7 @@
+${cacheDir}/wallbash/hamadaos.env|${WALLBASH_SCRIPTS}/hamadaos.sh
+# HamadaOS matugen bridge — written on every wallpaper/theme/mode switch,
+# then hamadaos.sh runs matugen against the current wallpaper.
+HAMADAOS_MODE="<wallbash_mode>"
+HAMADAOS_PRY1="<wallbash_pry1>"
+HAMADAOS_TXT1="<wallbash_txt1>"
+HAMADAOS_ACCENT="<wallbash_1xa9>"

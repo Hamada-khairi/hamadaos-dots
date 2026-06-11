@@ -1,0 +1,8 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# HamadaOS — hyprswitch Configuration (Alt+Tab visual switcher)
+# ═══════════════════════════════════════════════════════════════════════════════
+[main]
+max_switch_offset = 5
+show_title        = true
+filter_same_class = false
+workspaces_per_row = 5

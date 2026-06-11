@@ -1,0 +1,80 @@
+{
+    "name": "HamadaOS",
+    "type": "dark",
+    "colors": {
+        "editor.background":                      "{{colors.surface.default.hex}}",
+        "editor.foreground":                      "{{colors.on_surface.default.hex}}",
+        "editor.lineHighlightBackground":         "{{colors.surface_container_low.default.hex}}",
+        "editor.selectionBackground":             "{{colors.primary_container.default.hex}}",
+        "editor.selectionForeground":             "{{colors.on_primary_container.default.hex}}",
+        "editor.findMatchBackground":             "{{colors.tertiary_container.default.hex}}",
+        "editorCursor.foreground":                "{{colors.primary.default.hex}}",
+        "editorLineNumber.foreground":            "{{colors.outline.default.hex}}",
+        "editorLineNumber.activeForeground":      "{{colors.primary.default.hex}}",
+        "editorWidget.background":                "{{colors.surface_container.default.hex}}",
+        "editorWidget.border":                    "{{colors.outline.default.hex}}",
+
+        "activityBar.background":                 "{{colors.surface_dim.default.hex}}",
+        "activityBar.foreground":                 "{{colors.on_surface.default.hex}}",
+        "activityBar.inactiveForeground":         "{{colors.on_surface_variant.default.hex}}",
+        "activityBar.activeBorder":               "{{colors.primary.default.hex}}",
+
+        "sideBar.background":                     "{{colors.surface_container_low.default.hex}}",
+        "sideBar.foreground":                     "{{colors.on_surface.default.hex}}",
+        "sideBarSectionHeader.background":        "{{colors.surface_container.default.hex}}",
+
+        "statusBar.background":                   "{{colors.primary_container.default.hex}}",
+        "statusBar.foreground":                   "{{colors.on_primary_container.default.hex}}",
+        "statusBar.noFolderBackground":           "{{colors.surface_dim.default.hex}}",
+
+        "tab.activeBackground":                   "{{colors.surface.default.hex}}",
+        "tab.activeForeground":                   "{{colors.primary.default.hex}}",
+        "tab.inactiveBackground":                 "{{colors.surface_dim.default.hex}}",
+        "tab.inactiveForeground":                 "{{colors.on_surface_variant.default.hex}}",
+        "tab.border":                             "{{colors.outline.default.hex}}",
+        "editorGroupHeader.tabsBackground":       "{{colors.surface_dim.default.hex}}",
+
+        "terminal.background":                    "{{colors.surface.default.hex}}",
+        "terminal.foreground":                    "{{colors.on_surface.default.hex}}",
+        "terminal.ansiBlack":                     "{{colors.surface_dim.default.hex}}",
+        "terminal.ansiRed":                       "{{colors.error.default.hex}}",
+        "terminal.ansiGreen":                     "{{colors.tertiary.default.hex}}",
+        "terminal.ansiYellow":                    "{{colors.tertiary_container.default.hex}}",
+        "terminal.ansiBlue":                      "{{colors.secondary.default.hex}}",
+        "terminal.ansiMagenta":                   "{{colors.primary.default.hex}}",
+        "terminal.ansiCyan":                      "{{colors.secondary_container.default.hex}}",
+        "terminal.ansiWhite":                     "{{colors.on_surface.default.hex}}",
+
+        "panel.background":                       "{{colors.surface_container_low.default.hex}}",
+        "panel.border":                           "{{colors.outline.default.hex}}",
+
+        "titleBar.activeBackground":              "{{colors.surface_dim.default.hex}}",
+        "titleBar.activeForeground":              "{{colors.on_surface.default.hex}}",
+        "titleBar.inactiveBackground":            "{{colors.surface_dim.default.hex}}",
+
+        "scrollbar.shadow":                       "{{colors.shadow.default.hex}}",
+        "scrollbarSlider.background":             "{{colors.outline.default.hex}}60",
+        "scrollbarSlider.hoverBackground":        "{{colors.outline.default.hex}}90",
+
+        "button.background":                      "{{colors.primary_container.default.hex}}",
+        "button.foreground":                      "{{colors.on_primary_container.default.hex}}",
+        "button.secondaryBackground":             "{{colors.surface_container.default.hex}}",
+
+        "input.background":                       "{{colors.surface_container.default.hex}}",
+        "input.foreground":                       "{{colors.on_surface.default.hex}}",
+        "input.border":                           "{{colors.outline.default.hex}}",
+        "input.placeholderForeground":            "{{colors.on_surface_variant.default.hex}}",
+
+        "dropdown.background":                    "{{colors.surface_container.default.hex}}",
+        "dropdown.border":                        "{{colors.outline.default.hex}}",
+
+        "list.activeSelectionBackground":         "{{colors.primary_container.default.hex}}",
+        "list.activeSelectionForeground":         "{{colors.on_primary_container.default.hex}}",
+        "list.hoverBackground":                   "{{colors.surface_container_high.default.hex}}",
+        "list.inactiveSelectionBackground":       "{{colors.surface_container.default.hex}}",
+
+        "focusBorder":                            "{{colors.primary.default.hex}}",
+        "contrastBorder":                         "{{colors.outline.default.hex}}",
+        "widget.shadow":                          "{{colors.shadow.default.hex}}"
+    }
+}

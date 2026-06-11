@@ -1,0 +1,16 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# HamadaOS — GRUB Kernel Command Line (reference)
+# ═══════════════════════════════════════════════════════════════════════════════
+# Copy into /etc/default/grub → GRUB_CMDLINE_LINUX_DEFAULT
+# Then: sudo grub-mkconfig -o /boot/grub/grub.cfg
+#
+# NOTE: the old "nohz_full=all rcu_nocbs=all" advice floating around is
+# INVALID syntax (nohz_full takes a CPU list and cannot include the boot CPU).
+# Don't use it — it silently does nothing or warns at boot.
+#
+#   nowatchdog            — kill watchdog timer interrupts (latency)
+#   threadirqs            — IRQ handlers as threads (scheduler can deprioritize)
+#   mitigations=off       — 5-15% on older CPUs (personal gaming machine trade-off)
+#   split_lock_detect=off — never throttle split-lock-happy games (UE5, anticheat)
+# ═══════════════════════════════════════════════════════════════════════════════
+quiet splash loglevel=3 nowatchdog threadirqs mitigations=off split_lock_detect=off

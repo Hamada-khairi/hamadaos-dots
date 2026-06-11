@@ -1,0 +1,138 @@
+#!/usr/bin/env bash
+# ═══════════════════════════════════════════════════════════════════════════════
+# HamadaOS — Universal Game Launcher
+# ═══════════════════════════════════════════════════════════════════════════════
+# Steam launch options:        hamadaos-game-run %command%
+# Lutris/Heroic wrapper:       hamadaos-game-run
+#
+# Reads the hardware profile once, then applies ONLY what helps THIS machine:
+#
+#   Optimus laptop (MX350 etc.)  → PRIME render offload onto the dGPU while
+#                                  Hyprland keeps compositing on the iGPU
+#   ≤4.5GB VRAM (MX350, 3050)    → DXVK small-chunk allocation, VKD3D
+#                                  no-HVV uploads (without ReBAR, host-visible
+#                                  VRAM uploads just evict textures → stutter)
+#   NVIDIA                       → persistent shader cache, never cleaned
+#                                  (kills the recompile hitching on 2nd+ runs)
+#   Mesa (AMD/Intel)             → glthread + big persistent shader cache
+#   Everywhere                   → gamemoderun, optional MangoHud, optional
+#                                  gamescope FSR upscaling from Settings→Gaming
+#
+# Everything is opt-out by env: HAMADAOS_NO_GAMESCOPE=1, HAMADAOS_NO_GAMEMODE=1
+# ═══════════════════════════════════════════════════════════════════════════════
+
+set -uo pipefail
+
+CFG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/hamadaos"
+HW_ENV="$CFG_DIR/hardware.env"
+SETTINGS="$CFG_DIR/config.json"
+
+# Profile missing (first run)? Generate it now — never run blind.
+[[ -f "$HW_ENV" ]] || "$HOME/.config/hypr/scripts/hamadaos-hw-profile.sh" >/dev/null 2>&1 || true
+# shellcheck disable=SC1090
+[[ -f "$HW_ENV" ]] && source "$HW_ENV"
+
+# Defaults if profile still missing
+HAS_NVIDIA="${HAS_NVIDIA:-0}";  NVIDIA_PROPRIETARY="${NVIDIA_PROPRIETARY:-0}"
+IS_HYBRID="${IS_HYBRID:-0}";    LOW_VRAM="${LOW_VRAM:-0}"
+HAS_REBAR="${HAS_REBAR:-0}";    IS_VM="${IS_VM:-0}"; VM_HAS_3D="${VM_HAS_3D:-1}"
+
+# VM without 3D accel: gamescope on llvmpipe would only burn CPU.
+[[ "$IS_VM" == "1" && "$VM_HAS_3D" == "0" ]] && export HAMADAOS_NO_GAMESCOPE=1
+
+jq_opt() {  # jq_opt <key> <default>
+    command -v jq >/dev/null 2>&1 && [[ -f "$SETTINGS" ]] \
+        && jq -r ".$1 // \"$2\"" "$SETTINGS" 2>/dev/null || echo "$2"
+}
+
+# ═══ 1. GPU routing (hybrid laptops) ═════════════════════════════════════════════
+if [[ "$IS_HYBRID" == "1" && "$NVIDIA_PROPRIETARY" == "1" ]]; then
+    # PRIME render offload: game on dGPU, desktop stays on iGPU.
+    export __NV_PRIME_RENDER_OFFLOAD=1
+    export __GLX_VENDOR_LIBRARY_NAME=nvidia
+    export __VK_LAYER_NV_optimus=NVIDIA_only
+    export VK_LOADER_DRIVERS_DISABLE=""   # never mask the NVIDIA ICD
+elif [[ "$IS_HYBRID" == "1" && "${HAS_AMD_GPU:-0}" == "1" && "${HAS_INTEL_GPU:-0}" == "1" ]]; then
+    export DRI_PRIME=1
+fi
+
+# ═══ 2. Shader caches — the #1 stutter killer on 2nd+ runs ═══════════════════════
+if [[ "$NVIDIA_PROPRIETARY" == "1" ]]; then
+    export __GL_SHADER_DISK_CACHE=1
+    export __GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1
+    export __GL_SHADER_DISK_CACHE_PATH="${XDG_CACHE_HOME:-$HOME/.cache}/hamadaos-shaders"
+    mkdir -p "$__GL_SHADER_DISK_CACHE_PATH"
+    # OpenGL-native games only (harmless elsewhere):
+    export __GL_THREADED_OPTIMIZATIONS=1
+fi
+# Mesa path (AMD/Intel — also covers the iGPU side of hybrids):
+export MESA_SHADER_CACHE_MAX_SIZE=12G
+export mesa_glthread=true
+
+# ═══ 3. Low-VRAM survival mode (MX350 2GB · 3050 4GB) ════════════════════════════
+if [[ "$LOW_VRAM" == "1" ]]; then
+    # Smaller DXVK memory chunks → less overcommit, fewer mid-frame evictions.
+    export DXVK_CONFIG_FILE="$CFG_DIR/dxvk-lowvram.conf"
+    [[ -f "$DXVK_CONFIG_FILE" ]] || cat > "$DXVK_CONFIG_FILE" <<'EOF'
+# HamadaOS low-VRAM profile (auto-generated; safe to edit)
+dxvk.maxChunkSize = 64
+EOF
+    # DX12 (The Finals = UE5): without ReBAR, host-visible VRAM uploads fight
+    # textures for the same tiny BAR window — force the system-RAM upload path.
+    if [[ "$HAS_REBAR" == "0" ]]; then
+        export VKD3D_CONFIG="${VKD3D_CONFIG:+$VKD3D_CONFIG,}no_upload_hvv"
+    fi
+fi
+
+# ═══ 4. Wine/Proton sync primitives (fsync needs nothing on CachyOS kernels) ═════
+export PROTON_NO_ESYNC="${PROTON_NO_ESYNC:-}"   # leave Proton defaults: fsync>esync
+
+# ═══ 4b. Per-title overrides — because many gains are title-specific ═════════════
+# Drop a file in ~/.config/hamadaos/games.d/ named either:
+#     <SteamAppID>.env       (e.g. 2073850.env for The Finals)
+#     <executable-name>.env  (e.g. Discovery.exe.env)
+# Anything in it (PROTON_USE_NTSYNC=1, VKD3D_CONFIG=…, DXVK_FRAME_RATE=…)
+# overrides the automatic choices above for that one game.
+GAMES_D="$CFG_DIR/games.d"
+if [[ -d "$GAMES_D" ]]; then
+    OVR=""
+    [[ -n "${SteamAppId:-}" && -f "$GAMES_D/${SteamAppId}.env" ]] && OVR="$GAMES_D/${SteamAppId}.env"
+    if [[ -z "$OVR" ]]; then
+        for arg in "$@"; do
+            base="$(basename "$arg" 2>/dev/null)"
+            [[ -f "$GAMES_D/$base.env" ]] && { OVR="$GAMES_D/$base.env"; break; }
+        done
+    fi
+    if [[ -n "$OVR" ]]; then
+        set -a
+        # shellcheck disable=SC1090
+        source "$OVR"
+        set +a
+        echo "[hamadaos-game-run] per-title overrides: $OVR" >&2
+    fi
+fi
+
+# ═══ 5. MangoHud (from Settings → Gaming) ════════════════════════════════════════
+[[ "$(jq_opt mangoHudEnabled false)" == "true" ]] && export MANGOHUD=1
+
+# ═══ 6. Build the command chain ══════════════════════════════════════════════════
+CHAIN=()
+
+# gamescope FSR upscaling (from Settings → Gaming). Render low, look sharp.
+if [[ "${HAMADAOS_NO_GAMESCOPE:-0}" != "1" && "$(jq_opt gamescopeEnabled false)" == "true" ]] \
+   && command -v gamescope >/dev/null 2>&1; then
+    OUT_W="$(jq_opt gamescopeOutW 1920)"; OUT_H="$(jq_opt gamescopeOutH 1080)"
+    PCT="$(jq_opt gamescopeScale 75)"
+    REN_W=$(( OUT_W * PCT / 100 )); REN_H=$(( OUT_H * PCT / 100 ))
+    FPS="$(jq_opt gamescopeFpsCap 0)"
+    CHAIN+=(gamescope -w "$REN_W" -h "$REN_H" -W "$OUT_W" -H "$OUT_H" -F fsr -f)
+    [[ "$FPS" != "0" ]] && CHAIN+=(-r "$FPS")
+    CHAIN+=(--)
+fi
+
+# GameMode: per-game CPU boost + our system-wide hooks (see gamemode.ini)
+if [[ "${HAMADAOS_NO_GAMEMODE:-0}" != "1" ]] && command -v gamemoderun >/dev/null 2>&1; then
+    CHAIN+=(gamemoderun)
+fi
+
+exec "${CHAIN[@]}" "$@"

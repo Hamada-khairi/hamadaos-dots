@@ -1,0 +1,4 @@
+# HamadaOS — passwordless sudo for EXACTLY the commands gaming mode needs.
+# Installed by install.sh to /etc/sudoers.d/hamadaos-gaming (mode 0440).
+# Fixed argument lists only — no shells, no wildcards, no editable paths.
+%wheel ALL=(root) NOPASSWD: /usr/bin/tuned-adm profile throughput-performance, /usr/bin/tuned-adm profile balanced, /usr/local/bin/hamadaos-perf-tune gaming, /usr/local/bin/hamadaos-perf-tune balanced, /usr/local/bin/hamadaos-perf-tune cpu-boost-off, /usr/local/bin/hamadaos-perf-tune cpu-boost-on

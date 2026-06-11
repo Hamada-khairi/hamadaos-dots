@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=HamadaOS (Safe Mode)
+Comment=Minimal session — no plugins, no shell, rescue menu. Always boots.
+Exec=/usr/local/bin/hamadaos-safe-session
+Type=Application
